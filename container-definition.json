@@ -1,14 +1,7 @@
 [
     {
       
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "buzz-api-log-group",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "ecs"
-        }
-      },
+     
       "portMappings": [
         {
           "hostPort": 8080,
@@ -18,44 +11,21 @@
        
       ],
       "cpu": 256,
-      "environment": [
-        {
-          "name": "MANAGEMENT_SERVER_PORT",
-          "value": "8081"
-        },
-        {
-          "name": "SERVER_PORT",
-          "value": "8080"
-        }
-      ],
-      "secrets": [
-        {
-          "valueFrom": "db-url",
-          "name": "DATASOURCE_URL"
-        },
-        {
-          "valueFrom": "db-username",
-          "name": "DATASOURCE_USERNAME"
-        },
-        {
-          "valueFrom": "db-password",
-          "name": "DATASOURCE_PASSWORD"
-        }
-      ],
+      
       "memory": 512,
       "image": "",
       "healthCheck": {
         "retries": 3,
         "command": [
           "CMD-SHELL",
-          "curl -f http://localhost:8081/actuator/health || exit 1"
+          "curl -f http://localhost:8080/ || exit 1"
         ],
         "timeout": 5,
         "interval": 30,
         "startPeriod": 60
       },
       "essential": true,
-      "name": "BuzzApiContainer"
+      "name": "DemoContainer"
      
     }
 ]
