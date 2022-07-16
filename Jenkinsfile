@@ -31,7 +31,9 @@ pipeline {
 	    }	
 	 
     }
-     def getJarName() {
+    
+}
+    def getJarName() {
     def jarName = getName() + '-' + getVersion() + '.jar'
     echo "jarName: ${jarName}"
     return  jarName
@@ -46,4 +48,3 @@ pipeline {
     def pom = readMavenPom file: './pom.xml'
     return pom.name
     }
-}
