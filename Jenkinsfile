@@ -8,8 +8,8 @@ pipeline {
 	// jdk "JDK"
     }
     environment {
-        // POM_VERSION = getVersion()
-        // JAR_NAME = getJarName()
+        POM_VERSION = getVersion()
+        JAR_NAME = getJarName()
         AWS_ECR_REGION = 'us-east-1'
         AWS_ECS_CLUSTER = 'DemoCluster'
         AWS_ECS_SERVICE = 'Demo-api-service'
