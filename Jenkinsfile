@@ -64,7 +64,7 @@ pipeline {
                        		def sonar_api_token='da2c37151854a8de06fe5cb14d6dd186a6ab40d3';
                         	def sonar_project='com.example:java-maven';
                         	sh """#!/bin/bash +x
-				            sleep 120
+				            #sleep 120
                         	echo "Checking status of SonarQube Project = ${sonar_project}"
                         	sonar_status=`curl -s -u ${sonar_api_token}: http://18.232.150.243:9000/api/qualitygates/project_status?projectKey=${sonar_project} | grep '{' | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["'projectStatus'"]["'status'"];'`
                         	echo "SonarQube status = \$sonar_status"
