@@ -29,7 +29,7 @@ pipeline {
         
         stage('Pulling The Code From Git To Jenkins Server') {
             steps{
-               git branch: 'main', credentialsId: 'Github', url: 'https://github.com/kprasanth999/ECS-scripts.git'
+               git branch: 'main', credentialsId: 'GithubToken', url: 'https://github.com/kprasanth999/ECS-scripts.git'
 	        }
 	    }	
 	 
@@ -49,7 +49,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar-7') {
                     sh "mvn sonar:sonar \
-                    -Dsonar.host.url=http://http://100.24.11.164:9000 \
+                    -Dsonar.host.url=http://100.24.11.164:9000 \
                     -Dsonar.login=da2c37151854a8de06fe5cb14d6dd186a6ab40d3"
                 }
             }
@@ -65,7 +65,7 @@ pipeline {
                         	sh """#!/bin/bash +x
 				            sleep 120
                         	echo "Checking status of SonarQube Project = ${sonar_project}"
-                        	sonar_status=`curl -s -u ${sonar_api_token}: http://http://100.24.11.164:9000/api/qualitygates/project_status?projectKey=${sonar_project} | grep '{' | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["'projectStatus'"]["'status'"];'`
+                        	sonar_status=`curl -s -u ${sonar_api_token}: http://100.24.11.164:9000/api/qualitygates/project_status?projectKey=${sonar_project} | grep '{' | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["'projectStatus'"]["'status'"];'`
                         	echo "SonarQube status = \$sonar_status"
                         	case \$sonar_status in
                                 "ERROR")
