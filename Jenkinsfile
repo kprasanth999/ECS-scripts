@@ -22,6 +22,7 @@ pipeline {
         AWS_ECS_MEMORY = '512'
         AWS_ECS_EXECUTION_ROLE = 'arn:aws:iam::400385795902:role/AmazonECSTaskExecutionRolePolicy' 
         AWS_ECS_TASK_DEFINITION_PATH = './ecs/container-definition.json'
+        AWS_ECR_URL = '400385795902.dkr.ecr.us-east-1.amazonaws.com/ecr_testing_repo'
     }
 
     stages {
@@ -49,7 +50,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar-7') {
                     sh "mvn sonar:sonar \
-                    -Dsonar.host.url=http://100.24.11.164:9000 \
+                    -Dsonar.host.url=http://18.232.150.243:9000 \
                     -Dsonar.login=da2c37151854a8de06fe5cb14d6dd186a6ab40d3"
                 }
             }
@@ -65,7 +66,7 @@ pipeline {
                         	sh """#!/bin/bash +x
 				            sleep 120
                         	echo "Checking status of SonarQube Project = ${sonar_project}"
-                        	sonar_status=`curl -s -u ${sonar_api_token}: http://100.24.11.164:9000/api/qualitygates/project_status?projectKey=${sonar_project} | grep '{' | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["'projectStatus'"]["'status'"];'`
+                        	sonar_status=`curl -s -u ${sonar_api_token}: http://18.232.150.243:9000/api/qualitygates/project_status?projectKey=${sonar_project} | grep '{' | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["'projectStatus'"]["'status'"];'`
                         	echo "SonarQube status = \$sonar_status"
                         	case \$sonar_status in
                                 "ERROR")
@@ -105,6 +106,7 @@ pipeline {
 		        script {
 			
 		            sh "mvn clean package" 
+                    sh "env"
 				                   
                 }
 	        }	
@@ -117,7 +119,7 @@ pipeline {
 				    file: 'target/java-maven-${Version}.war', type: 'war']], 
 			            credentialsId: 'Nexus-pw', 
 			            groupId: 'com.example', 
-			            nexusUrl: '100.24.11.164:8080/nexus', 
+			            nexusUrl: '18.232.150.243:8080/nexus', 
 			            nexusVersion: 'nexus2', 
 			            protocol: 'http', 
 			            repository: 'releases/', 
@@ -205,7 +207,7 @@ pipeline {
 
         stage('Deploy in ECS') {
             steps {
-                withCredentials([string(credentialsId: 'AWS_EXECUTION_ROL_SECRET', variable: 'AWS_ECS_EXECUTION_ROL'),string(credentialsId: 'AWS_REPOSITORY_URL_SECRET', variable: 'AWS_ECR_URL')]) {
+                //withCredentials([string(credentialsId: 'AWS_EXECUTION_ROL_SECRET', variable: 'AWS_ECS_EXECUTION_ROL'),string(credentialsId: 'AWS_REPOSITORY_URL_SECRET', variable: 'AWS_ECR_URL')]) {
                     script {
                         updateContainerDefinitionJsonWithImageVersion()
                         sh("/usr/local/bin/aws ecs register-task-definition --region ${AWS_ECR_REGION} --family ${AWS_ECS_TASK_DEFINITION} --execution-role-arn ${AWS_ECS_EXECUTION_ROLE} --requires-compatibilities ${AWS_ECS_COMPATIBILITY} --network-mode ${AWS_ECS_NETWORK_MODE} --cpu ${AWS_ECS_CPU} --memory ${AWS_ECS_MEMORY} --container-definitions file://${AWS_ECS_TASK_DEFINITION_PATH}")
@@ -217,19 +219,25 @@ pipeline {
         }
     }
 } 
-    def getJarName() {
+def getJarName() {
     def jarName = getName() + '-' + getVersion() + '.jar'
     echo "jarName: ${jarName}"
     return  jarName
 }
 
-    def getVersion() {
+def getVersion() {
     def pom = readMavenPom file: './pom.xml'
     return pom.version
 }
 
-    def getName() {
+def getName() {
     def pom = readMavenPom file: './pom.xml'
     return pom.name
 }
-   
+
+def updateContainerDefinitionJsonWithImageVersion() {
+    def containerDefinitionJson = readJSON file: AWS_ECS_TASK_DEFINITION_PATH, returnPojo: true
+    containerDefinitionJson[0]['image'] = "${AWS_ECR_URL}:${POM_VERSION}".inspect()
+    echo "task definiton json: ${containerDefinitionJson}"
+    writeJSON file: AWS_ECS_TASK_DEFINITION_PATH, json: containerDefinitionJson
+}  
