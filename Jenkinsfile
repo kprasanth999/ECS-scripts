@@ -21,7 +21,7 @@ pipeline {
         AWS_ECS_CPU = '256'
         AWS_ECS_MEMORY = '512'
         AWS_ECS_EXECUTION_ROLE = 'arn:aws:iam::400385795902:role/AmazonECSTaskExecutionRolePolicy' 
-        AWS_ECS_TASK_DEFINITION_PATH = './ecs/container-definition.json'
+        AWS_ECS_TASK_DEFINITION_PATH = './container-definition.json'
         AWS_ECR_URL = '400385795902.dkr.ecr.us-east-1.amazonaws.com/ecr_testing_repo'
     }
 
