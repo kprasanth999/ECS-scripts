@@ -50,7 +50,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar-7') {
                     sh "mvn sonar:sonar \
-                    -Dsonar.host.url=http://18.232.150.243:9000 \
+                    -Dsonar.host.url=http://34.204.51.2:9000 \
                     -Dsonar.login=da2c37151854a8de06fe5cb14d6dd186a6ab40d3"
                 }
             }
@@ -64,9 +64,9 @@ pipeline {
                        		def sonar_api_token='da2c37151854a8de06fe5cb14d6dd186a6ab40d3';
                         	def sonar_project='com.example:java-maven';
                         	sh """#!/bin/bash +x
-				            #sleep 120
+				            sleep 30
                         	echo "Checking status of SonarQube Project = ${sonar_project}"
-                        	sonar_status=`curl -s -u ${sonar_api_token}: http://18.232.150.243:9000/api/qualitygates/project_status?projectKey=${sonar_project} | grep '{' | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["'projectStatus'"]["'status'"];'`
+                        	sonar_status=`curl -s -u ${sonar_api_token}: http://34.204.51.2:9000/api/qualitygates/project_status?projectKey=${sonar_project} | grep '{' | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["'projectStatus'"]["'status'"];'`
                         	echo "SonarQube status = \$sonar_status"
                         	case \$sonar_status in
                                 "ERROR")
@@ -119,7 +119,7 @@ pipeline {
 				    file: 'target/java-maven-${Version}.war', type: 'war']], 
 			            credentialsId: 'Nexus-pw', 
 			            groupId: 'com.example', 
-			            nexusUrl: '18.232.150.243:8080/nexus', 
+			            nexusUrl: '34.204.51.2:8080/nexus', 
 			            nexusVersion: 'nexus2', 
 			            protocol: 'http', 
 			            repository: 'releases/', 
@@ -169,27 +169,7 @@ pipeline {
 	        }
         }
 
-        stage('Build Docker Image For Production') {
-            steps{
-                sh "docker build -t ecr_production_repo ."  
-            }
-        }
-	 
-        stage('Tagging the Docker Image with ECR Production Repository Name') {
-            steps{
-                sh "docker tag ecr_production_repo:latest 400385795902.dkr.ecr.us-east-1.amazonaws.com/ecr_production_repo:latest"  
-            }
-        }
-    
-    
-        stage('Uploading The Image into ECR in Production Repository') {
-            steps{
-                script{
-                    sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 400385795902.dkr.ecr.us-east-1.amazonaws.com'
-                    sh 'docker push 400385795902.dkr.ecr.us-east-1.amazonaws.com/ecr_production_repo:latest'
-                }
-            }
-        }   
+        
 	    
 	    
 	    
@@ -219,10 +199,10 @@ pipeline {
         }
     }
 } 
-def getJarName() {
-    def jarName = getName() + '-' + getVersion() + '.jar'
-    echo "jarName: ${jarName}"
-    return  jarName
+def getWarName() {
+    def warName = getName() + '-' + getVersion() + '.war'
+    echo "warName: ${warName}"
+    return  warName
 }
 
 def getVersion() {
@@ -237,7 +217,7 @@ def getName() {
 
 def updateContainerDefinitionJsonWithImageVersion() {
     def containerDefinitionJson = readJSON file: AWS_ECS_TASK_DEFINITION_PATH, returnPojo: true
-    containerDefinitionJson[0]['image'] = "${AWS_ECR_URL}:${POM_VERSION}".inspect()
+    containerDefinitionJson[0]['image'] = "${AWS_ECR_URL}:latest".inspect()
     echo "task definiton json: ${containerDefinitionJson}"
     writeJSON file: AWS_ECS_TASK_DEFINITION_PATH, json: containerDefinitionJson
 }  
